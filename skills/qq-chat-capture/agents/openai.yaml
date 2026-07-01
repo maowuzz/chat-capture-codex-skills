@@ -1,0 +1,4 @@
+agent:
+  display_name: "QQ Chat Capture"
+  short_description: "Capture and organize QQ group chat records through a local OneBot-compatible setup."
+  default_prompt: "Use qq-chat-capture to capture authorized QQ group messages incrementally and save them under the configured workspace."

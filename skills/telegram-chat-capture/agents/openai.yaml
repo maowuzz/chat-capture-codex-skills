@@ -1,0 +1,4 @@
+agent:
+  display_name: "Telegram Chat Capture"
+  short_description: "Capture Telegram groups, channels, private chats, and archived chats incrementally through a local Telethon setup."
+  default_prompt: "Use telegram-chat-capture to capture authorized Telegram messages incrementally without exposing local secrets."

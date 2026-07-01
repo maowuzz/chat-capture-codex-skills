@@ -1,0 +1,4 @@
+agent:
+  display_name: "Discord Chat Capture"
+  short_description: "Capture Discord channel messages, forum posts, thread bodies, and replies through local Desktop debugging."
+  default_prompt: "Use discord-chat-capture to capture authorized Discord messages and thread replies, then clean and merge the results."

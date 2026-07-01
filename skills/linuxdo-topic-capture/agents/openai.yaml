@@ -1,0 +1,4 @@
+agent:
+  display_name: "Linux.do Topic Capture"
+  short_description: "Capture Linux.do topic list titles, links, ids, and visible metadata from an existing in-app browser login session."
+  default_prompt: "Use linuxdo-topic-capture to capture Linux.do topic list metadata only and save it separately from other platforms."
