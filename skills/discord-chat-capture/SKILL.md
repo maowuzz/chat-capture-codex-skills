@@ -33,6 +33,7 @@ Do not use this skill for:
    `<SKILL_DIR>\scripts\discord_api_all_threads_sampler.py`
 6. For a specific current thread, use:
    `<SKILL_DIR>\scripts\discord_api_thread_sampler.py`
+   Parse both `/channels/<guild>/<thread>` and `/channels/<guild>/<parent>/threads/<thread>` routes; prefer the open URL's thread id over title-only matching.
 7. For currently visible channel messages, use:
    `<SKILL_DIR>\scripts\discord_dom_sampler.py`
 8. Clean/merge/index with:

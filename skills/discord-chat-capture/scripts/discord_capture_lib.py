@@ -20,8 +20,18 @@ import requests
 import websocket
 
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
+
 DISCORD_API = "https://discord.com/api/v9"
 DISCORD_EPOCH_MS = 1420070400000
+DISCORD_LINK_PATTERN = re.compile(
+    r"https?://(?:(?:ptb|canary)\.)?discord(?:app)?\.com/channels/[^\s)>\]}]+",
+    re.IGNORECASE,
+)
 
 
 class CaptureError(RuntimeError):
@@ -296,6 +306,10 @@ class DiscordRest:
 
 
 def infer_guild_and_channel(url: str) -> tuple[str | None, str | None]:
+    thread_match = re.search(r"/channels/(\d+|@me)/(\d+)/threads/(\d+)", url)
+    if thread_match:
+        guild = None if thread_match.group(1) == "@me" else thread_match.group(1)
+        return guild, thread_match.group(3)
     match = re.search(r"/channels/(\d+|@me)/(\d+)", url)
     if not match:
         return None, None
@@ -303,9 +317,51 @@ def infer_guild_and_channel(url: str) -> tuple[str | None, str | None]:
     return guild, match.group(2)
 
 
+def extract_discord_links(value: Any) -> list[str]:
+    """Collect Discord deep links from nested message content without resolving them."""
+    found: set[str] = set()
+
+    def visit(item: Any) -> None:
+        if isinstance(item, str):
+            found.update(link.rstrip(".,;:") for link in DISCORD_LINK_PATTERN.findall(item))
+        elif isinstance(item, dict):
+            for child in item.values():
+                visit(child)
+        elif isinstance(item, list):
+            for child in item:
+                visit(child)
+
+    visit(value)
+    return sorted(found)
+
+
 def message_to_record(message: dict[str, Any], thread: dict[str, Any]) -> dict[str, Any]:
     author = message.get("author") or {}
     timestamp = message.get("timestamp")
+    referenced = message.get("referenced_message")
+    referenced_summary = None
+    if isinstance(referenced, dict):
+        referenced_author = referenced.get("author") or {}
+        referenced_summary = {
+            "message_id": str(referenced.get("id", "")),
+            "channel_id": str(referenced.get("channel_id", "")),
+            "author": referenced_author.get("global_name") or referenced_author.get("username") or "",
+            "author_id": str(referenced_author.get("id", "")),
+            "timestamp": referenced.get("timestamp"),
+            "content": referenced.get("content", ""),
+            "attachments": referenced.get("attachments") or [],
+            "embeds": referenced.get("embeds") or [],
+        }
+    mentions = []
+    for mention in message.get("mentions") or []:
+        if isinstance(mention, dict):
+            mentions.append(
+                {
+                    "id": str(mention.get("id", "")),
+                    "username": mention.get("username", ""),
+                    "global_name": mention.get("global_name"),
+                }
+            )
     return {
         "record_type": "thread",
         "guild_id": thread.get("guild_id"),
@@ -322,6 +378,14 @@ def message_to_record(message: dict[str, Any], thread: dict[str, Any]) -> dict[s
         "content": message.get("content", ""),
         "attachments": message.get("attachments") or [],
         "embeds": message.get("embeds") or [],
+        "mentions": mentions,
+        "mention_roles": message.get("mention_roles") or [],
+        "message_reference": message.get("message_reference"),
+        "referenced_message": referenced_summary,
+        "message_snapshots": message.get("message_snapshots") or [],
+        "components": message.get("components") or [],
+        "position": message.get("position"),
+        "discord_links": extract_discord_links(message),
         "edited_timestamp": message.get("edited_timestamp"),
         "type": message.get("type"),
         "captured_at": utc_now_iso(),
@@ -339,6 +403,10 @@ def fetch_thread_messages(
 
     # In a Discord thread the starter message normally has the same snowflake as the thread.
     starter = api.get(f"/channels/{thread_id}/messages/{thread_id}", allow_missing=True)
+    if not isinstance(starter, dict) and thread.get("parent_id"):
+        starter = api.get(
+            f"/channels/{thread['parent_id']}/messages/{thread_id}", allow_missing=True
+        )
     if isinstance(starter, dict) and starter.get("id"):
         messages[str(starter["id"])] = starter
 
@@ -367,6 +435,9 @@ def fetch_thread_messages(
         timestamp = parse_time(message.get("timestamp"))
         if cutoff and timestamp and timestamp < cutoff and not is_starter:
             continue
-        selected.append(message_to_record(message, thread))
+        record = message_to_record(message, thread)
+        record["starter_available"] = thread_id in messages
+        record["thread_message_count_hint"] = thread.get("message_count")
+        selected.append(record)
     selected.sort(key=lambda item: item.get("timestamp") or "")
     return selected

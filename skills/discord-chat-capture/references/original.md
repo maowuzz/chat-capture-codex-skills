@@ -154,10 +154,12 @@ Thread-body completeness expectations:
 - Include `attachments` and `embeds`; do not rely only on `content`.
 - A thread can be old but still active. Treat `last_message_id`, archive timestamp, and fetched message timestamps as activity signals; do not filter solely by thread creation time.
 - If the user says "正文", "帖子内容", "全部回复", or shows a forum/thread screenshot, run the all-threads sampler and merge results into the threads cumulative file.
-- If the current Discord page URL is `/channels/<guild_id>/<thread_id>` or the page title is a specific thread title, directly fetch that `<thread_id>` first with:
+- If the current Discord page URL is `/channels/<guild_id>/<thread_id>` or `/channels/<guild_id>/<parent_id>/threads/<thread_id>`, parse the final thread id and directly fetch it first with:
   - `GET /api/v9/channels/<thread_id>` to confirm title, parent channel, last_message_id, and message_count.
   - `GET /api/v9/channels/<thread_id>/messages?limit=100&before=...` until no more pages.
   Do this even if the all-threads discovery output did not include the thread. Direct thread URL capture is the required fallback for active/unarchived forum posts that user-token discovery APIs may miss.
+- Do not trust title-only matching when duplicate thread titles exist. Prefer the currently open URL's thread id. If title search returns multiple threads, verify `message_count`, starter availability, author, timestamps, and non-bot content before selecting one.
+- Persist `message_reference`, `referenced_message`, `message_snapshots`, `components`, `mentions`, and extracted `discord_links` so replies, forwarded content, and internal jump links can be organized later.
 - After a user points at a specific thread/title, verify capture by searching the cumulative threads file for the title or thread id. If not found, run direct thread-id capture before reporting completion.
 
 For incremental capture since pause, write raw and clean files like:
