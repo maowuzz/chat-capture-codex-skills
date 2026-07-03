@@ -192,7 +192,7 @@ Classification rules:
 - Different thread plus message id: capture the target thread for context but retain `reference_scope=message`.
 - Different thread without message id: capture the whole thread and retain `reference_scope=thread_or_channel`.
 - Normal channel plus message id: fetch the cited message and a small surrounding window.
-- Message id `0`, deleted targets, or inaccessible channels: preserve the URL and mark it unresolved.
+- Treat a trailing message id `0` as a synthetic Thread-top link when its channel/thread resolves; deleted targets or inaccessible channels remain unresolved.
 - Deduplicate by URL and cache each fetched thread so repeated links do not repeat API pagination.
 
 Read:

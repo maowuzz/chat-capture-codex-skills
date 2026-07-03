@@ -202,9 +202,25 @@ def main() -> int:
             item["reference_scope"] = "message" if message_id else "thread_or_channel"
 
             if message_id == "0":
-                item.update({"status": "invalid_message_id", "error": "message id is 0"})
-                results.append(item)
-                continue
+                item["zero_message_as_top"] = True
+                item["message_id"] = None
+                item["reference_scope"] = "thread_or_channel"
+                message_id = None
+                if item["same_thread"]:
+                    source_title = next(
+                        (row.get("thread_title") for row in rows if row.get("thread_title")),
+                        "",
+                    )
+                    item.update(
+                        {
+                            "resolved": True,
+                            "status": "same_thread_top",
+                            "target_kind": "thread",
+                            "target_title": source_title,
+                        }
+                    )
+                    results.append(item)
+                    continue
 
             if item["same_thread"] and message_id:
                 record = source_by_message.get(str(message_id))
