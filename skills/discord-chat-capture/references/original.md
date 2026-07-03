@@ -1,6 +1,6 @@
 ---
 name: discord-chat-capture
-description: "Capture, paginate, clean, index, summarize, and organize Discord server channel messages and thread replies from the local Discord Desktop remote debugging setup. Use when the user asks to 抓Discord聊天记录, 抓帖子底下回复, 抓<DISCORD_SERVER_NAME>服务器, 从暂停时间到现在拉取Discord, avoid screenshot/OCR capture, filter NSFW/adult channels, or organize Discord chat output files. Do not use for QQ/微信/飞书 routing, Codex Desktop Browser/iab repair, Cockpit/API, web research, or general thread orchestration; use the matching local skill."
+description: "Capture, paginate, clean, index, summarize, and organize Discord server channel messages and thread replies from the local Discord Desktop remote debugging setup. Use when the user asks to 抓Discord聊天记录, 抓帖子底下回复, 抓指定Discord服务器, 从暂停时间到现在拉取Discord, avoid screenshot/OCR capture, filter NSFW/adult channels, or organize Discord chat output files. Do not use for QQ/微信/飞书 routing, Codex Desktop Browser/iab repair, Cockpit/API, web research, or general thread orchestration; use the matching local skill."
 ---
 
 # Discord Chat Capture
@@ -40,14 +40,14 @@ Known server:
 guild id: <DISCORD_GUILD_ID>
 ```
 
-Core scripts:
+Bundled scripts (resolve `<SKILL_DIR>` to this skill folder):
 
 ```text
-work\discord_sampler\discord_<DISCORD_SERVER_NAME>_dom_sampler.py
-work\discord_sampler\discord_<DISCORD_SERVER_NAME>_api_thread_sampler.py
-work\discord_sampler\discord_<DISCORD_SERVER_NAME>_api_all_threads_sampler.py
-work\discord_sampler\discord_memory.py
-work\discord_sampler\discord_desktop_probe.py
+<SKILL_DIR>\scripts\discord_dom_sampler.py
+<SKILL_DIR>\scripts\discord_api_thread_sampler.py
+<SKILL_DIR>\scripts\discord_api_all_threads_sampler.py
+<SKILL_DIR>\scripts\discord_memory.py
+<SKILL_DIR>\scripts\discord_desktop_probe.py
 ```
 
 Pause state shared with the chat-record robot:
@@ -87,13 +87,20 @@ work\samples\discord\db\discord_all_merged.sqlite3
 - Do not restore any recurring automation unless the user explicitly asks.
 - After every successful manual or incremental capture, keep the increment files and also merge the new records into the canonical cumulative Discord files above.
 
-## Health check
+## Runtime setup and health check
+
+Install dependencies once:
+
+```powershell
+python -m pip install -r <SKILL_DIR>\scripts\requirements.txt
+```
 
 Run:
 
 ```powershell
 cd <YOUR_CHAT_CAPTURE_WORKSPACE>
 Invoke-RestMethod http://127.0.0.1:<DISCORD_DEBUG_PORT>/json/list
+python <SKILL_DIR>\scripts\discord_desktop_probe.py --port <DISCORD_DEBUG_PORT>
 ```
 
 If the endpoint is down and the user wants capture now, restart only Discord Desktop with the debug port:
@@ -116,8 +123,8 @@ DOM channel capture is useful for currently loadable channel messages:
 
 ```powershell
 cd <YOUR_CHAT_CAPTURE_WORKSPACE>
-python work\discord_sampler\discord_<DISCORD_SERVER_NAME>_dom_sampler.py --port 9333 --days 15 --scrolls 20 --out work\samples\discord\channels\raw\discord_<DISCORD_SERVER_NAME>_channels_raw.jsonl
-python work\discord_sampler\discord_memory.py clean --input work\samples\discord\channels\raw\discord_<DISCORD_SERVER_NAME>_channels_raw.jsonl --output work\samples\discord\channels\clean\discord_<DISCORD_SERVER_NAME>_channels.clean.jsonl
+python <SKILL_DIR>\scripts\discord_dom_sampler.py --port 9333 --days 15 --scrolls 20 --out work\samples\discord\channels\raw\discord_<DISCORD_SERVER_NAME>_channels_raw.jsonl
+python <SKILL_DIR>\scripts\discord_memory.py clean --input work\samples\discord\channels\raw\discord_<DISCORD_SERVER_NAME>_channels_raw.jsonl --output work\samples\discord\channels\clean\discord_<DISCORD_SERVER_NAME>_channels.clean.jsonl
 ```
 
 Warn the user if they need true full channel history: DOM capture may miss virtualized/off-screen history. A dedicated channel API paginator is needed for full channel backfill.
@@ -128,14 +135,14 @@ Use API pagination for post/thread bodies and replies. Default to the all-thread
 
 ```powershell
 cd <YOUR_CHAT_CAPTURE_WORKSPACE>
-python work\discord_sampler\discord_<DISCORD_SERVER_NAME>_api_all_threads_sampler.py --port 9333 --days 15 --max-pages 200 --out work\samples\discord\threads\raw\discord_<DISCORD_SERVER_NAME>_threads_recent_15d_body_api.raw.jsonl
+python <SKILL_DIR>\scripts\discord_api_all_threads_sampler.py --port 9333 --guild-id <DISCORD_GUILD_ID> --days 15 --max-pages 200 --out work\samples\discord\threads\raw\discord_<DISCORD_SERVER_NAME>_threads_recent_15d_body_api.raw.jsonl
 ```
 
 Older fallback, only when the all-threads sampler fails:
 
 ```powershell
 cd <YOUR_CHAT_CAPTURE_WORKSPACE>
-python work\discord_sampler\discord_<DISCORD_SERVER_NAME>_api_thread_sampler.py --port 9333 --days 15 --max-pages 80 --out work\samples\discord\threads\raw\discord_<DISCORD_SERVER_NAME>_threads_recent_15d_api.jsonl
+python <SKILL_DIR>\scripts\discord_api_thread_sampler.py --port 9333 --days 15 --max-pages 80 --out work\samples\discord\threads\raw\discord_<DISCORD_SERVER_NAME>_threads_recent_15d_api.jsonl
 ```
 
 This script captures Authorization only in memory through DevTools/network state. Never log or persist it.
