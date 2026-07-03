@@ -48,6 +48,7 @@ Bundled scripts (resolve `<SKILL_DIR>` to this skill folder):
 <SKILL_DIR>\scripts\discord_api_all_threads_sampler.py
 <SKILL_DIR>\scripts\discord_memory.py
 <SKILL_DIR>\scripts\discord_desktop_probe.py
+<SKILL_DIR>\scripts\discord_jump_resolver.py
 <SKILL_DIR>\scripts\start_discord_debug.ps1
 ```
 
@@ -176,6 +177,23 @@ work\samples\discord\threads\clean\discord_<DISCORD_SERVER_NAME>_threads_all_mer
 ```
 
 ## Filter since pause time
+
+## Internal jump links
+
+Resolve Discord `/channels/...` links after capturing a source thread:
+
+```powershell
+python <SKILL_DIR>\scripts\discord_jump_resolver.py --port 9333 --input <SOURCE_JSONL> --out work\samples\discord\jumps\manifest.json --target-dir work\samples\discord\jumps\targets
+```
+
+Classification rules:
+
+- Same thread plus message id: resolve from the source capture and assign `dc-<message_id>`.
+- Different thread plus message id: capture the target thread for context but retain `reference_scope=message`.
+- Different thread without message id: capture the whole thread and retain `reference_scope=thread_or_channel`.
+- Normal channel plus message id: fetch the cited message and a small surrounding window.
+- Message id `0`, deleted targets, or inaccessible channels: preserve the URL and mark it unresolved.
+- Deduplicate by URL and cache each fetched thread so repeated links do not repeat API pagination.
 
 Read:
 

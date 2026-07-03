@@ -36,9 +36,11 @@ Do not use this skill for:
    Parse both `/channels/<guild>/<thread>` and `/channels/<guild>/<parent>/threads/<thread>` routes; prefer the open URL's thread id over title-only matching.
 7. For currently visible channel messages, use:
    `<SKILL_DIR>\scripts\discord_dom_sampler.py`
-8. Clean/merge/index with:
+8. Resolve internal Discord jump links with:
+   `<SKILL_DIR>\scripts\discord_jump_resolver.py`
+9. Clean/merge/index with:
    `<SKILL_DIR>\scripts\discord_memory.py`
-9. Keep outputs under:
+10. Keep outputs under:
    `work\samples\discord\`
 
 ## Reference map
