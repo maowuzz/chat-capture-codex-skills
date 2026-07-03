@@ -224,7 +224,7 @@ def capture_authorization(client: CDPClient, timeout: int = 30, reload_page: boo
         if method == "Network.requestWillBeSent":
             request = params.get("request", {})
             url = str(request.get("url", ""))
-            if "discord.com/api/" not in url:
+            if not re.search(r"https://(?:[^/]+\.)?(?:discord\.com|discordapp\.com)/api/", url):
                 continue
             request_id = str(params.get("requestId", ""))
             discord_api_request_ids.add(request_id)
