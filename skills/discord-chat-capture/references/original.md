@@ -48,6 +48,7 @@ Bundled scripts (resolve `<SKILL_DIR>` to this skill folder):
 <SKILL_DIR>\scripts\discord_api_all_threads_sampler.py
 <SKILL_DIR>\scripts\discord_memory.py
 <SKILL_DIR>\scripts\discord_desktop_probe.py
+<SKILL_DIR>\scripts\start_discord_debug.ps1
 ```
 
 Pause state shared with the chat-record robot:
@@ -103,12 +104,10 @@ Invoke-RestMethod http://127.0.0.1:<DISCORD_DEBUG_PORT>/json/list
 python <SKILL_DIR>\scripts\discord_desktop_probe.py --port <DISCORD_DEBUG_PORT>
 ```
 
-If the endpoint is down and the user wants capture now, restart only Discord Desktop with the debug port:
+If the endpoint is down and the user wants capture now, restart only Discord Desktop with the bundled launcher:
 
 ```powershell
-Get-Process Discord -ErrorAction SilentlyContinue | Stop-Process -Force
-Start-Sleep -Seconds 2
-Start-Process "$env:LOCALAPPDATA\Discord\app-<YOUR_DISCORD_VERSION>\Discord.exe" -ArgumentList "--remote-debugging-port=9333" -WindowStyle Hidden
+powershell -ExecutionPolicy Bypass -File <SKILL_DIR>\scripts\start_discord_debug.ps1 -Port 9333 -Restart
 ```
 
 If the installed Discord version path differs, locate it under:

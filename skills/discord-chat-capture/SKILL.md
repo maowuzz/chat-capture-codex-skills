@@ -25,17 +25,19 @@ Do not use this skill for:
    `<YOUR_CHAT_CAPTURE_WORKSPACE>`
 2. Check Discord debug endpoint:
    `http://127.0.0.1:<DISCORD_DEBUG_PORT>/json/list`
-3. Install runtime requirements once:
+3. On Windows, launch or restart Discord in debug mode with:
+   `powershell -ExecutionPolicy Bypass -File <SKILL_DIR>\scripts\start_discord_debug.ps1 -Port <DISCORD_DEBUG_PORT> -Restart`
+4. Install runtime requirements once:
    `python -m pip install -r <SKILL_DIR>\scripts\requirements.txt`
-4. For normal Discord thread/forum capture, prefer:
+5. For normal Discord thread/forum capture, prefer:
    `<SKILL_DIR>\scripts\discord_api_all_threads_sampler.py`
-5. For a specific current thread, use:
+6. For a specific current thread, use:
    `<SKILL_DIR>\scripts\discord_api_thread_sampler.py`
-6. For currently visible channel messages, use:
+7. For currently visible channel messages, use:
    `<SKILL_DIR>\scripts\discord_dom_sampler.py`
-7. Clean/merge/index with:
+8. Clean/merge/index with:
    `<SKILL_DIR>\scripts\discord_memory.py`
-8. Keep outputs under:
+9. Keep outputs under:
    `work\samples\discord\`
 
 ## Reference map
